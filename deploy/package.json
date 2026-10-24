@@ -1,0 +1,13 @@
+{
+	"name": "ocean-of-thought-deploy",
+	"private": true,
+	"type": "module",
+	"description": "Deploys ../site (the restored Ocean of Thought player) to oot.kschzt.com as a static-assets Worker",
+	"scripts": {
+		"deploy": "cf deploy"
+	},
+	"devDependencies": {
+		"cf": "0.15.0",
+		"wrangler": "4.152.0"
+	}
+}

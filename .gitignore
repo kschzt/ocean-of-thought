@@ -1,0 +1,15 @@
+# the 52 GB copy of the Vizor dev DB and the MongoDB binaries that read it
+/mongo-db/
+/tools/mongodb-*/
+*.tgz
+mongod*.log
+
+# fetched by install.sh
+/tools/fonts/
+
+# deploy tooling
+/deploy/node_modules/
+/deploy/.cloudflare/
+.wrangler/
+
+.DS_Store

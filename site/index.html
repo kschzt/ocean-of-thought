@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, shrink-to-fit=no" />
+	<title>Ocean of Thought</title>
+	<meta name="description" content="Ocean of Thought by fthr (Antti Lintunen), music by Machinedrum. A 2017 WebVR demo made in Vizor Patches, restored from backup." />
+	<style>
+		html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+		#webgl-canvas { display: block; width: 100%; height: 100%; }
+		#veil {
+			position: fixed; inset: 0; display: flex; flex-direction: column;
+			align-items: center; justify-content: center; gap: 10px;
+			color: #cfe; font: 300 15px/1.4 system-ui, sans-serif;
+			background: rgba(0,0,0,.6); cursor: pointer; text-align: center;
+		}
+		#veil h1 { font-weight: 200; letter-spacing: .12em; margin: 0; font-size: 34px; color: #fff; }
+		#veil .progress { opacity: .7; }
+		#veil.hidden { display: none; }
+		#variant { position: fixed; right: 10px; bottom: 8px; font: 11px system-ui, sans-serif; color: #567; }
+		#variant a { color: #789; }
+	</style>
+
+	<script>
+		// stubs for bits of the vizor.io site that the player touches
+		var E2 = { track: function() {} }
+		var VizorUI = {
+			isMobile: {
+				Android: function() { return /Android/i.test(navigator.userAgent) },
+				iOS: function() { return /iPhone|iPad|iPod/i.test(navigator.userAgent) },
+				any: function() { return VizorUI.isMobile.Android() || VizorUI.isMobile.iOS() }
+			},
+			checkCompatibleBrowser: function() { return true }
+		}
+
+		var variant = /[?&]v=jan31\b/.test(location.search) ? 'jan31' : 'final'
+
+		var Vizor = {
+			origin: location.origin,
+			isEditor: false,
+			autoplay: true,
+			noHeader: true,
+			hasAudio: true,
+			hasVideo: false,
+			cdnRoot: 'data',
+			graphName: 'ocean-of-thought',
+			hideWebVRButton: true,
+			isEmbedded: false,
+			startMode: 1
+		}
+	</script>
+
+	<!-- same order as vizor.io's views/layouts/player.handlebars -->
+	<script src="vendor/jquery-2.1.0.min.js"></script>
+	<script>
+		// The model loader asks the vizor.io server `GET /stat/<asset>` whether an .obj
+		// has a sibling .mtl; the server answered 200 with {error} when it didn't.
+		// Answer it from the static data/ tree instead.
+		(function() {
+			var get = $.get
+			$.get = function(url, cb) {
+				if (typeof url !== 'string' || url.indexOf('/stat/') !== 0)
+					return get.apply(this, arguments)
+
+				return $.ajax({ url: Vizor.cdnRoot + url.slice('/stat'.length), type: 'HEAD' })
+					.then(function() { cb && cb({}) },
+						function(xhr) { cb && cb({ error: xhr.status }) })
+			}
+		})()
+	</script>
+	<script src="scripts/event-emitter.js"></script>
+	<script src="scripts/util.js"></script>
+	<script src="scripts/hardware.js"></script>
+	<script src="vendor/webvr-polyfill.js"></script>
+	<script src="vendor/webvr-manager.js"></script>
+	<script src="scripts/webVRAdapter.js"></script>
+	<script src="js/player.js"></script>
+</head>
+<body>
+	<canvas id="webgl-canvas" oncontextmenu="return false;"></canvas>
+
+	<div id="veil">
+		<h1>OCEAN OF THOUGHT</h1>
+		<div>fthr &middot; music by Machinedrum</div>
+		<div class="progress">loading&hellip;</div>
+	</div>
+	<div id="variant"></div>
+
+	<script>
+		$('#webgl-canvas').attr('data-graph-url', 'graph/' + variant + '.json')
+
+		$('#variant').html(variant === 'final'
+			? 'final (Mar 2017) &middot; <a href="?v=jan31">Jan 31 version</a>'
+			: 'Jan 31 2017 version &middot; <a href="?">final</a>')
+
+		// browsers now start an AudioContext suspended until a user gesture, which
+		// didn't exist in 2017. The veil gives us that gesture before the demo's own
+		// in-world start screen.
+		$(window).on('vizorLoaded', function() {
+			E2.core.on('progress', function(pct) {
+				$('#veil .progress').text('loading ' + Math.round(pct) + '%')
+			})
+			E2.core.on('assetsLoaded', function() {
+				$('#veil .progress').text('click to enter')
+			})
+		})
+
+		$('#veil').on('click touchend', function() {
+			var ctx = E2.core && E2.core.audioContext
+			if (ctx && ctx.state === 'suspended')
+				ctx.resume()
+			$('#veil').addClass('hidden')
+		})
+	</script>
+</body>
+</html>
