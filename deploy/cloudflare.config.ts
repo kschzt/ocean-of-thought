@@ -1,6 +1,6 @@
 import { defineConfig } from "cf/config";
 
-// Static-assets Worker serving the restored player in ../site at oot.kschzt.com
+// Static-assets Worker serving the restored player in ../site
 export default defineConfig({
 	worker: {
 		name: "ocean-of-thought",
@@ -8,7 +8,7 @@ export default defineConfig({
 		assets: {
 			notFoundHandling: "none",
 		},
-		domains: ["oot.kschzt.com"],
+		domains: ["oceanofthought.com", "www.oceanofthought.com", "oot.kschzt.com"],
 		workersDev: false,
 	},
 });

@@ -3,7 +3,7 @@
 fthr's (Antti) 2017 WebVR demo for Machinedrum's *Ocean of Thought* (Human Energy, Ninja Tune 2016),
 made in Vizor Patches. Restored from Time Machine backups in October 2026.
 
-Live at **https://oot.kschzt.com**. `?v=jan31` plays the earlier, complete January iteration.
+Live at **https://oceanofthought.com** (also oot.kschzt.com). `?v=jan31` plays the earlier, complete January iteration.
 
 ```sh
 ./install.sh                     # dependencies (Homebrew or apt), engine submodule, fonts, deploy tooling
@@ -19,7 +19,7 @@ python3 -m http.server 8642 --bind 127.0.0.1 --directory site
 | `graph/` | the two source graphs as recovered (untouched) |
 | `patches/` | submodule: github.com/vizorvr/patches at 0e38d507, **0.15.23**, released 2017-03-28, the day the final graph was saved |
 | `tools/` | build / extract / test scripts |
-| `deploy/` | `cf deploy` config: a static-assets Worker on oot.kschzt.com |
+| `deploy/` | `cf deploy` config: a static-assets Worker on oceanofthought.com, www., and oot.kschzt.com |
 | `reference/` | the 0.15 `player.min.js` vizor.io actually served (from GridFS, 2017-01-18), for comparison |
 
 ## Where it came from
