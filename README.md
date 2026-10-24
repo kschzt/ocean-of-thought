@@ -1,6 +1,6 @@
 # Ocean of Thought — restored
 
-fthr's (Antti) 2017 WebVR demo for Machinedrum's *Ocean of Thought* (Human Energy, Ninja Tune 2016),
+fthr's (Antti Jädertpolm) 2017 WebVR demo for Machinedrum's *Ocean of Thought* (Human Energy, Ninja Tune 2016),
 made in Vizor Patches. Restored from Time Machine backups in October 2026.
 
 Live at **https://oceanofthought.com** (also oot.kschzt.com). `?v=jan31` plays the earlier, complete January iteration.
