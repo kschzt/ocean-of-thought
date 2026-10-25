@@ -1,0 +1,7 @@
+# Cloudflare only compresses text types it knows, and model/obj isn't one.
+# The models are ~19 MB of text that gzip to under 6.
+/*.obj
+  Content-Type: text/plain; charset=utf-8
+
+/*.mtl
+  Content-Type: text/plain; charset=utf-8

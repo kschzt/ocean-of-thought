@@ -48,13 +48,22 @@ If the originals turn up, drop them into `site/data/` under their original paths
 matching lines from `SUBSTITUTIONS`.
 
 `site/index.html` stands in for vizor.io's `views/layouts/player.handlebars`. It loads the scripts
-in the same order and adds four shims:
+in the same order and adds these shims:
 
 - `E2.track` and `VizorUI` stubs.
 - A `/stat/` handler answered with a HEAD request against `data/`. The OBJ loader asked the server
   whether a `.mtl` existed and hangs forever on a plain 404.
-- A click-to-enter veil that resumes the AudioContext, which today's autoplay rules require.
+- A click-to-enter veil that resumes the AudioContext, which today's autoplay rules require. On
+  iOS the same tap asks for motion access and lets the soundtrack play with the ringer off. The
+  veil stays up until loading finishes.
+- Magic window on phones: the polyfill's pose comes from `deviceorientation` instead of its own
+  devicemotion fusion. iOS sends no motion events without that permission, and the 2016 filter
+  then points the camera straight up, so the start screen was out of view.
+- Safari preloads the soundtrack's `.m4a` directly rather than first fetching the `.ogg` it
+  can't decode.
 - A small variant switch (final / jan31).
+
+`site/_headers` serves the `.obj` models as text so Cloudflare compresses them (19 MB → about 4).
 
 ## Tools
 

@@ -93,23 +93,122 @@
 			? 'final (Mar 2017) &middot; <a href="?v=jan31">Jan 31 version</a>'
 			: 'Jan 31 2017 version &middot; <a href="?">final</a>')
 
+		// Phones look around by moving the phone ("magic window"). The 2016 polyfill
+		// fuses raw devicemotion samples for that, which iOS only sends once the page
+		// asks permission from a tap; with no samples its filter sits at identity,
+		// which on iOS points the camera straight up at an empty sky. Drive the
+		// polyfill's pose from deviceorientation instead, as three.js'
+		// DeviceOrientationControls does, and stay level until there's data.
+		var installMagicWindow = (function() {
+			var deg = Math.PI / 180
+			var euler = new THREE.Euler()
+			var backOfPhone = new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2)
+			var screenQ = new THREE.Quaternion(), heading = new THREE.Quaternion()
+			var device = new THREE.Quaternion(), pan = new THREE.Quaternion()
+			var zee = new THREE.Vector3(0, 0, 1), up = new THREE.Vector3(0, 1, 0)
+			var forward = new THREE.Vector3()
+			var last = null, aligned = false
+
+			// the polyfill's touch panner turns about its own filter axis, which
+			// points the other way on iOS (and it flips the drag to match)
+			var panSign = VizorUI.isMobile.iOS() ? -1 : 1
+
+			window.addEventListener('deviceorientation', function(e) {
+				if (e.alpha !== null)
+					last = e
+			})
+
+			function orientation(sensor) {
+				device.set(0, 0, 0, 1)
+
+				if (last) {
+					euler.set(last.beta * deg, last.alpha * deg, -last.gamma * deg, 'YXZ')
+					device.setFromEuler(euler).multiply(backOfPhone)
+					device.multiply(screenQ.setFromAxisAngle(zee, -(window.orientation || 0) * deg))
+
+					if (!aligned) {
+						// start out facing the scene, whichever way the phone points
+						forward.set(0, 0, -1).applyQuaternion(device)
+						heading.setFromAxisAngle(up, -Math.atan2(-forward.x, -forward.z))
+						aligned = true
+					}
+				}
+
+				var q = pan.setFromAxisAngle(up, panSign * sensor.touchPanner.theta)
+					.multiply(heading).multiply(device)
+
+				var out = sensor.orientationOut_
+				out[0] = q.x; out[1] = q.y; out[2] = q.z; out[3] = q.w
+				return out
+			}
+
+			return function() {
+				var displays = (window._webVRPolyfill && _webVRPolyfill.displays) || []
+				displays.forEach(function(display) {
+					var sensor = display.poseSensor_
+					if (!sensor || !sensor.touchPanner || sensor.magicWindow)
+						return
+
+					sensor.magicWindow = true
+					sensor.getOrientation = function() { return orientation(sensor) }
+				})
+			}
+		})()
+
 		// browsers now start an AudioContext suspended until a user gesture, which
 		// didn't exist in 2017. The veil gives us that gesture before the demo's own
-		// in-world start screen.
+		// in-world start screen, and on iOS the one that may ask for motion access.
+		// A tap while loading counts, but the veil stays up until there's a scene.
+		var loaded = false, entered = false
+
+		function reveal() {
+			if (loaded && entered)
+				$('#veil').addClass('hidden')
+		}
+
 		$(window).on('vizorLoaded', function() {
+			var tap = 'ontouchstart' in window ? 'tap' : 'click'
+
+			installMagicWindow()
+			E2.core.webVRAdapter.on('ready', installMagicWindow)
+
+			// the soundtrack plugin swaps .ogg for .m4a on Safari, but only after the
+			// preloader has fetched the .ogg, which Safari can't decode
+			var assetLoader = E2.core.assetLoader, loadAsset = assetLoader.loadAsset
+			assetLoader.loadAsset = function(type, url) {
+				if (type === 'audiobuffer' && (E2.util.isMobile.iOS() || E2.util.isBrowser.Safari()))
+					url = url.replace(/\.ogg$/, '.m4a')
+				return loadAsset.call(this, type, url)
+			}
+
 			E2.core.on('progress', function(pct) {
-				$('#veil .progress').text('loading ' + Math.round(pct) + '%')
+				// assets loaded after the preload report progress again
+				if (!loaded)
+					$('#veil .progress').text('loading ' + Math.round(pct) + '%')
 			})
 			E2.core.on('assetsLoaded', function() {
-				$('#veil .progress').text('click to enter')
+				loaded = true
+				installMagicWindow()
+				$('#veil .progress').text(tap + ' to enter')
+				reveal()
 			})
 		})
 
-		$('#veil').on('click touchend', function() {
+		$('#veil').on('click', function() {
+			// iOS reports 'interrupted' as well as 'suspended'
 			var ctx = E2.core && E2.core.audioContext
-			if (ctx && ctx.state === 'suspended')
+			if (ctx && ctx.state !== 'running')
 				ctx.resume()
-			$('#veil').addClass('hidden')
+
+			// play the soundtrack like a video would, even with the ringer off
+			if (navigator.audioSession)
+				navigator.audioSession.type = 'playback'
+
+			if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission)
+				DeviceOrientationEvent.requestPermission().catch(function() {})
+
+			entered = true
+			reveal()
 		})
 	</script>
 </body>
