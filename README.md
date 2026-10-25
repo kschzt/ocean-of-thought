@@ -65,6 +65,11 @@ in the same order and adds these shims:
 
 `site/_headers` serves the `.obj` models as text so Cloudflare compresses them (19 MB → about 4).
 
+iPhone Safari has no fullscreen API except for video, so `site/manifest.webmanifest` and the iOS
+meta tags let the demo be added to the home screen, where it opens without browser bars. `og.jpg`
+(the title screen, for link previews) and the icons (a frame about a minute in) were captured
+with `WIDTH=1200 HEIGHT=630 SCALE=2 node tools/drive.mjs …`.
+
 ## Tools
 
 ```sh

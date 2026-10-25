@@ -4,6 +4,8 @@
 //   node tools/drive.mjs <url> <outdir> [action ...]
 //
 // actions:  wait:<ms>  shot:<name>  click:<x>,<y>  key:<char>  eval:<js>
+//           cdp:<Domain.method> (eg. cdp:Page.getAppManifest)
+// env:      WIDTH, HEIGHT (default 1280x720), SCALE (device pixel ratio, default 1)
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -13,7 +15,8 @@ const [url, outdir, ...actions] = process.argv.slice(2)
 const CHROME = process.env.CHROME || (process.platform === 'darwin'
 	? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 	: 'google-chrome')
-const W = 1280, H = 720
+const W = Number(process.env.WIDTH) || 1280, H = Number(process.env.HEIGHT) || 720
+const SCALE = Number(process.env.SCALE) || 1
 
 fs.mkdirSync(outdir, { recursive: true })
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'oot-chrome-'))
@@ -83,7 +86,7 @@ ws.addEventListener('message', (ev) => {
 await send('Runtime.enable')
 await send('Log.enable')
 await send('Page.enable')
-await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false })
+await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: SCALE, mobile: false })
 await send('Page.navigate', { url })
 
 for (const action of actions) {
@@ -110,6 +113,9 @@ for (const action of actions) {
 	} else if (verb === 'eval') {
 		const r = await send('Runtime.evaluate', { expression: arg, returnByValue: true, awaitPromise: true })
 		console.log(`${stamp()} [eval] ${JSON.stringify(r.result.value)}`.slice(0, 2000))
+	} else if (verb === 'cdp') {
+		const r = await send(arg, {})
+		console.log(`${stamp()} [cdp] ${JSON.stringify(r)}`.slice(0, 4000))
 	}
 }
 
