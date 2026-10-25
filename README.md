@@ -70,6 +70,10 @@ meta tags let the demo be added to the home screen, where it opens without brows
 (the title screen, for link previews) and the icons (a frame about a minute in) were captured
 with `WIDTH=1200 HEIGHT=630 SCALE=2 node tools/drive.mjs …`.
 
+Visits are counted with Cloudflare Web Analytics (snippet at the end of `index.html`): no cookies,
+nothing stored on the device, no personal data. Cloudflare's auto-inject doesn't reach Worker
+responses, hence the manual snippet. All three hostnames report into the one site.
+
 ## Tools
 
 ```sh
